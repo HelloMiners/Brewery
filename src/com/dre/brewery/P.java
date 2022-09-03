@@ -123,6 +123,9 @@ public class P extends JavaPlugin {
 			return;
 		}
 
+		// Load recipe files
+		BConfig.loadRecipeConfigs();
+
 		// Register Item Loaders
 		CustomItem.registerItemLoader(this);
 		SimpleItem.registerItemLoader(this);
@@ -238,6 +241,9 @@ public class P extends JavaPlugin {
 			getServer().getPluginManager().disablePlugin(this);
 			return;
 		}
+
+		// Load recipe files
+		BConfig.loadRecipeConfigs();
 
 		// Reload Cauldron Particle Recipes
 		BCauldron.reload();

@@ -174,6 +174,34 @@ public class BConfig {
 		return null;
 	}
 
+	public static void loadRecipeConfigs() {
+		File recipeDir = new File(p.getDataFolder(), "recipes");
+		if (!recipeDir.isDirectory()) {
+			return;
+		}
+		for (File recipeFile : recipeDir.listFiles()) {
+			if (!recipeFile.isFile() || !recipeFile.getName().endsWith(".yml")) {
+				continue;
+			}
+			loadRecipes(YamlConfiguration.loadConfiguration(recipeFile), "recipes" + File.separator + recipeFile.getName());
+		}
+	}
+
+	public static void loadRecipes(ConfigurationSection recipesConfig, String location) {
+		if (recipesConfig != null) {
+			List<BRecipe> configRecipes = BRecipe.getConfigRecipes();
+			for (String recipeId : recipesConfig.getKeys(false)) {
+				BRecipe recipe = BRecipe.fromConfig(recipesConfig, recipeId);
+				if (recipe != null && recipe.isValid()) {
+					configRecipes.add(recipe);
+					BRecipe.numConfigRecipes++;
+				} else {
+					p.errorLog("Loading the Recipe with id: '" + recipeId + "' in '" + location + "' failed!");
+				}
+			}
+		}
+	}
+
 	public static void readConfig(FileConfiguration config) {
 		// Set the Language
 		p.language = config.getString("language", "en");
@@ -278,19 +306,7 @@ public class BConfig {
 		}
 
 		// loading recipes
-		configSection = config.getConfigurationSection("recipes");
-		if (configSection != null) {
-			List<BRecipe> configRecipes = BRecipe.getConfigRecipes();
-			for (String recipeId : configSection.getKeys(false)) {
-				BRecipe recipe = BRecipe.fromConfig(configSection, recipeId);
-				if (recipe != null && recipe.isValid()) {
-					configRecipes.add(recipe);
-				} else {
-					p.errorLog("Loading the Recipe with id: '" + recipeId + "' failed!");
-				}
-			}
-			BRecipe.numConfigRecipes = configRecipes.size();
-		}
+		loadRecipes(config.getConfigurationSection("recipes"), "config.yml");
 
 		// Loading Cauldron Recipes
 		configSection = config.getConfigurationSection("cauldron");
