@@ -32,11 +32,14 @@ import org.bukkit.plugin.PluginManager;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 public class BConfig {
 
@@ -176,14 +179,18 @@ public class BConfig {
 
 	public static void loadRecipeConfigs() {
 		File recipeDir = new File(p.getDataFolder(), "recipes");
-		if (!recipeDir.isDirectory()) {
+		if (!recipeDir.exists()) {
+			recipeDir.mkdir();
+		}
+		else if (!recipeDir.isDirectory()) {
 			return;
 		}
-		for (File recipeFile : recipeDir.listFiles()) {
-			if (!recipeFile.isFile() || !recipeFile.getName().endsWith(".yml")) {
-				continue;
-			}
-			loadRecipes(YamlConfiguration.loadConfiguration(recipeFile), "recipes" + File.separator + recipeFile.getName());
+		try (Stream<Path> pathStream = Files.find(recipeDir.toPath(), Integer.MAX_VALUE, (path, fileAttribute) ->
+			fileAttribute.isRegularFile() && path.toString().endsWith(".yml"))) {
+			pathStream.forEach(path -> loadRecipes(YamlConfiguration.loadConfiguration(path.toFile()), path.toString()));
+		}
+		catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 
